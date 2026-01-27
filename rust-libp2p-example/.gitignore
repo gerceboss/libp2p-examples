@@ -1,0 +1,36 @@
+# Rust
+/target/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build / output
+dist/
+relay
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Env
+.env
+.env.*
+
+# Libp2p peerstore (persisted peer data)
+peerstore/
+
+# Coverage / profiling
+coverage/
+*.profraw
+tarpaulin-report.html
