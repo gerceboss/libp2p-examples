@@ -6,15 +6,15 @@ import "time"
 
 // Relay server timeouts
 var RELAY_TIMEOUTS = struct {
-	HOP_TIMEOUT                      time.Duration
-	PROTOCOL_NEGOTIATION_INBOUND     time.Duration
-	PROTOCOL_NEGOTIATION_OUTBOUND    time.Duration
-	UPGRADE_INBOUND                  time.Duration
-	UPGRADE_OUTBOUND                 time.Duration
-	DIAL_TIMEOUT                     time.Duration
+	HOP_TIMEOUT                   time.Duration
+	PROTOCOL_NEGOTIATION_INBOUND  time.Duration
+	PROTOCOL_NEGOTIATION_OUTBOUND time.Duration
+	UPGRADE_INBOUND               time.Duration
+	UPGRADE_OUTBOUND              time.Duration
+	DIAL_TIMEOUT                  time.Duration
 }{
 	HOP_TIMEOUT:                   30 * time.Second,
-	PROTOCOL_NEGOTIATION_INBOUND: 30 * time.Second,
+	PROTOCOL_NEGOTIATION_INBOUND:  30 * time.Second,
 	PROTOCOL_NEGOTIATION_OUTBOUND: 30 * time.Second,
 	UPGRADE_INBOUND:               30 * time.Second,
 	UPGRADE_OUTBOUND:              30 * time.Second,
@@ -23,9 +23,9 @@ var RELAY_TIMEOUTS = struct {
 
 // Relay server reservation configuration
 var RELAY_RESERVATIONS = struct {
-	MAX_RESERVATIONS      int
-	RESERVATION_TTL       time.Duration
-	DEFAULT_DATA_LIMIT    uint64
+	MAX_RESERVATIONS       int
+	RESERVATION_TTL        time.Duration
+	DEFAULT_DATA_LIMIT     uint64
 	DEFAULT_DURATION_LIMIT time.Duration
 }{
 	MAX_RESERVATIONS:       1000,
