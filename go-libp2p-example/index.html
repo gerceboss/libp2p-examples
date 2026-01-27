@@ -1,0 +1,251 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collaborative Spreadsheet - Yjs + libp2p</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        margin: 2rem;
+      }
+      #status {
+        margin-bottom: 1rem;
+      }
+      .row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .row > * {
+        flex: 1;
+      }
+      #peers {
+        background: #f5f5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+      }
+      #peers h3 {
+        margin-top: 0;
+      }
+      .peer {
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 4px;
+      }
+      .peer-id {
+        font-family: ui-monospace, monospace;
+        font-size: 0.9em;
+      }
+      .transport {
+        display: inline-block;
+        background: #e0e0e0;
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+        margin: 0.2rem;
+        font-size: 0.85em;
+        color: white;
+        font-weight: 500;
+      }
+      .transport.relay {
+        background: #ff9800;
+      }
+      .transport.relay\+webrtc {
+        background: #8bc34a;
+      }
+      .transport.webrtc {
+        background: #4caf50;
+      }
+      .transport.websocket {
+        background: #2196f3;
+      }
+      .transport.websocket-secure {
+        background: #1565c0;
+      }
+
+      /* Spreadsheet styles */
+      #spreadsheet-container {
+        margin-top: 1rem;
+        overflow: auto;
+        max-height: 600px;
+        border: 1px solid #ddd;
+      }
+      #spreadsheet {
+        border-collapse: collapse;
+        background: white;
+      }
+      #spreadsheet th {
+        background: #f5f5f5;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        font-weight: 600;
+        min-width: 40px;
+        text-align: center;
+      }
+      #spreadsheet td {
+        border: 1px solid #ddd;
+        padding: 0;
+        position: relative;
+      }
+      #spreadsheet input {
+        border: none;
+        padding: 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: inherit;
+      }
+      #spreadsheet input:focus {
+        outline: 2px solid #1976d2;
+        outline-offset: -2px;
+      }
+      #spreadsheet td.selected {
+        background: #e3f2fd;
+      }
+      #spreadsheet td.error input {
+        color: #d32f2f;
+      }
+      #formula-bar {
+        margin-bottom: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      #formula-bar label {
+        font-weight: 600;
+      }
+      #formula-input {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        font-family: ui-monospace, monospace;
+      }
+      #formula-input:disabled {
+        background: #f5f5f5;
+      }
+      .examples {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f9f9f9;
+        border-radius: 4px;
+      }
+      .examples h3 {
+        margin-top: 0;
+      }
+      .examples code {
+        background: white;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+      }
+      #peer-id-display {
+        background: #e3f2fd;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-family: ui-monospace, monospace;
+        font-size: 0.9em;
+        border: 1px solid #90caf9;
+      }
+      #peer-id-display strong {
+        font-family: system-ui;
+        margin-right: 0.5rem;
+      }
+      #peer-id-value {
+        color: #1565c0;
+        font-weight: 600;
+      }
+      #multiaddrs {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f0f7ff;
+        border: 1px solid #90caf9;
+        border-radius: 4px;
+      }
+      #multiaddrs h3 {
+        margin-top: 0;
+        font-family: system-ui;
+        font-size: 1em;
+        margin-bottom: 0.5rem;
+      }
+      #multiaddr-select {
+        width: 100%;
+        padding: 0.5rem;
+        font-family: ui-monospace, monospace;
+        font-size: 0.85em;
+        border: 1px solid #90caf9;
+        border-radius: 4px;
+        background: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Collaborative Spreadsheet</h1>
+    <p>P2P Spreadsheet with formulas powered by Yjs + libp2p</p>
+
+    <div id="peer-id-display" style="display: none">
+      <strong>My Peer ID:</strong> <span id="peer-id-value"></span>
+    </div>
+
+    <div id="status">
+      <label>Topic: <input id="topic" value="spreadsheet-1" /></label>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+        <button id="connect-webrtc">Connect via WebRTC-Direct</button>
+        <button id="connect-websocket">Connect via WebSocket</button>
+      </div>
+      <div id="connection-mode" style="margin-top: 0.5rem; font-size: 0.9em; color: #666;"></div>
+    </div>
+
+    <div id="peers" style="display: none">
+      <h3>Connected Peers (<span id="peer-count">0</span>)</h3>
+      <div id="peer-list"></div>
+    </div>
+
+    <div id="formula-bar" style="display: none">
+      <label id="cell-ref">A1:</label>
+      <input
+        id="formula-input"
+        type="text"
+        placeholder="Enter value or formula (e.g., =A1+B1)"
+        disabled
+      />
+    </div>
+
+    <div id="spreadsheet-container" style="display: none">
+      <table id="spreadsheet"></table>
+    </div>
+
+    <div class="examples" style="display: none" id="examples">
+      <h3>Formula Examples</h3>
+      <ul>
+        <li><code>=A1+B1</code> - Add two cells</li>
+        <li><code>=A1*2</code> - Multiply by constant</li>
+        <li><code>=SUM(A1:A10)</code> - Sum a range</li>
+        <li><code>=(A1+B1)/2</code> - Average of two cells</li>
+      </ul>
+    </div>
+
+    <div id="multiaddrs" style="display: none">
+      <h3>My Multiaddresses</h3>
+      <select id="multiaddr-select" size="5"></select>
+    </div>
+
+    <div style="margin-top: 1rem;">
+      <h3>Activity Log</h3>
+      <textarea 
+        id="log" 
+        readonly 
+        style="width: 100%; height: 200px; font-family: ui-monospace, monospace; font-size: 0.9em; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; resize: vertical; background: #f9f9f9;"
+      ></textarea>
+    </div>
+
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+node_modules/
+
+# macOS
+.DS_Store
+
+# Go
+/relay
+*.exe
+*.test
+*.out
+
+# Local data
+/peerstore/
+
+# Vite
+dist/
+.vite/
+
+# Playwright
+/playwright-report/
+/test-results/
