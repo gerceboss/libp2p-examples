@@ -12,7 +12,8 @@ use anyhow::{Context, Result};
 use base64::Engine;
 use futures::StreamExt;
 use libp2p::{
-    core::multiaddr::Protocol,
+    autonat, core::multiaddr::Protocol,
+    dcutr,
     gossipsub::{self, IdentTopic, MessageAuthenticity, ValidationMode},
     identify, identity, noise, ping, relay,
     swarm::{NetworkBehaviour, SwarmEvent},
@@ -27,6 +28,8 @@ pub struct Behaviour {
     relay: relay::Behaviour,
     ping: ping::Behaviour,
     identify: identify::Behaviour,
+    autonat: autonat::Behaviour,
+    dcutr: dcutr::Behaviour,
     gossipsub: gossipsub::Behaviour,
 }
 
@@ -85,6 +88,8 @@ pub async fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>>
             .map_err(|e| std::io::Error::other(format!("gossipsub: {}", e)))?;
 
             let relay_config = relay::Config::default();
+            let autonat = autonat::Behaviour::new(peer_id, autonat::Config::default());
+            let dcutr = dcutr::Behaviour::new(peer_id);
             Ok(Behaviour {
                 relay: relay::Behaviour::new(peer_id, relay_config),
                 ping: ping::Behaviour::new(ping::Config::new()),
@@ -92,6 +97,8 @@ pub async fn build_swarm(keypair: identity::Keypair) -> Result<Swarm<Behaviour>>
                     "/yjs-libp2p-relay/0.1.0".to_string(),
                     key.public(),
                 )),
+                autonat,
+                dcutr,
                 gossipsub,
             })
         })?
@@ -171,6 +178,20 @@ pub async fn run_loop(
                             "Message on topic from {}",
                             peer_id_short(&propagation_source.to_string())
                         );
+                    }
+                    if let BehaviourEvent::Autonat(autonat::Event::StatusChanged { new, .. }) = ev {
+                        tracing::info!("AutoNAT status changed: {:?}", new);
+                    }
+                    if let BehaviourEvent::Dcutr(dcutr::Event {
+                        remote_peer_id,
+                        result,
+                    }) = ev
+                    {
+                        let short = peer_id_short(&remote_peer_id.to_string());
+                        match result {
+                            Ok(_) => tracing::info!("DCUtR hole-punch succeeded with {}", short),
+                            Err(e) => tracing::info!("DCUtR hole-punch failed with {}: {}", short, e),
+                        }
                     }
                 }
             }

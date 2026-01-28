@@ -9,7 +9,7 @@ name = "relay"
 path = "src/main.rs"
 
 [dependencies]
-libp2p = { version = "0.53", features = ["tokio", "tcp", "websocket", "dns", "noise", "yamux", "identify", "ping", "gossipsub", "relay", "macros"] }
+libp2p = { version = "0.53", features = ["tokio", "tcp", "websocket", "dns", "noise", "yamux", "identify", "ping", "gossipsub", "relay", "autonat", "dcutr", "macros"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

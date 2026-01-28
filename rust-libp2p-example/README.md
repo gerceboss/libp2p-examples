@@ -17,7 +17,9 @@ Key features:
 
 - **Custom Yjs Provider**: a libp2p-based connection provider for Yjs (`yjs-libp2p-provider.js`)
 - **Circuit Relay**: NAT traversal via a relay server (implemented here in **Rust** libp2p)
-- **AutoNAT / Identify**: peer identification + NAT detection
+- **AutoNAT**: NAT detection — relay answers dial-back requests so clients can discover if they’re behind NAT
+- **DCUtR (hole punching)**: Direct Connection Upgrade through Relay; peers connected via relay can upgrade to direct connections
+- **Identify**: peer identification
 - **PubSub**: GossipSub for document synchronization
 - **Peer Discovery**: automatic connection to discovered peers via pubsub peer discovery
 
@@ -60,7 +62,7 @@ Or for development:
 cargo run --bin relay
 ```
 
-The relay loads `relay-peer-id.json` from the project root or `js-libp2p-example-yjs-libp2p/`. The PeerId must match `bootstrappers.js` for the frontend to connect.
+The relay loads `relay-peer-id.json` from the project root . The PeerId must match `bootstrappers.js` for the frontend to connect.
 
 The relay listens on:
 
@@ -88,7 +90,7 @@ Open `http://localhost:5173` in multiple browser tabs/windows.
 
 ### Debug mode
 
-**Rust relay:** set `RELAY_DEBUG=true` or `DEBUG=true` to log peer connect/disconnect and pubsub messages:
+**Rust relay:** set `RELAY_DEBUG=true` or `DEBUG=true` to log peer connect/disconnect, pubsub messages, AutoNAT status changes, and DCUtR hole-punch events:
 
 ```bash
 RELAY_DEBUG=true cargo run --bin relay
@@ -100,16 +102,18 @@ RELAY_DEBUG=true cargo run --bin relay
 http://localhost:5173/?debug=true
 ```
 
-## Rust relay (port of `relay.js`)
+## Rust relay server 
 
-`src/main.rs` implements the same behaviour as `js-libp2p-example-yjs-libp2p/relay.js`:
+`src/main.rs` and `src/relay.rs` implement the following behaviour :
 
 - Loads (or requires) `relay-peer-id.json`; PeerId must match `bootstrappers.js`
 - Listens on TCP 9091 and WebSocket 9092
-- Circuit relay server, GossipSub, identify, ping
+- **Circuit relay** server, **GossipSub**, **identify**, **ping**
+- **AutoNAT**: answers dial-back requests so clients can detect if they’re behind NAT
+- **DCUtR**: hole punching so peers connected via relay can upgrade to direct connections
 - Subscribes to `_peer-discovery._p2p._pubsub` and default Yjs topics (`yjs-doc-1`, `spreadsheet-1`)
 - HTTP server on 9094 with `/api/addresses` (CORS, same JSON shape as `relay.js`)
-- Optional debug logging via `RELAY_DEBUG` / `DEBUG`
+- Optional debug logging via `RELAY_DEBUG` / `DEBUG` (including AutoNAT and DCUtR events)
 
 Constants (timeouts, discovery topic, etc.) align with `relay-constants.js` where applicable.
 
