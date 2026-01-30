@@ -1,0 +1,45 @@
+# Nim compiler outputs
+main
+main.exe
+nimcache/
+*.exe
+*.pdb
+*.dll
+*.so
+*.dylib
+
+# Nimble
+nimbledeps/
+pkgs/
+pkgs2/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Node.js (if mixing with JS frontend)
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
